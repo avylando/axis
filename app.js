@@ -15,35 +15,29 @@
     let maxB = maxSum - minA;
 
     let container = document.querySelector('.container');
-    let aElement = container.querySelector('.a');
-    let bElement = container.querySelector('.b');
     let sumElement = container.querySelector('.sum');
+    let elements = container.querySelectorAll('.element');
+    let values = [a, b];
+
+    function elementsMap(key, getBlock) {
+        getBlock = getBlock || false;
+
+        if (getBlock) {
+            return elements[key];
+        }
+
+        return values[key];
+    }
+
+    elements.forEach(function(el, i) {
+        el.textContent = elementsMap(i);
+    })
+
     let ctx = document.querySelector('#canvas').getContext('2d');
-    
-    aElement.textContent = a;
-    bElement.textContent = b;
 
     ctx.strokeStyle = '#ED1D30';
     ctx.lineWidth = 2;
     ctx.beginPath();
-
-    function counterMap(key, getBlock) {
-        getBlock = getBlock || false;
-
-        if (getBlock) {
-            switch (key) {
-                case 0: return aElement;
-                case 1: return bElement;
-                default: return false;
-            }
-        }
-
-        switch (key) {
-            case 0: return a;
-            case 1: return b;
-            default: return false;
-        }
-    }
     
     function renderArrow(start) {
         ctx.moveTo(start, 200);
@@ -59,8 +53,8 @@
         const step = 39;
 
         return function () {
-            let value = counterMap(counter);
-            let mY = 70 + (50*counter);
+            let value = elementsMap(counter);
+            let mY = 70 + (40*counter);
             let k = value * step;
             let endX = startX + k;
             let mx1 = startX + (step/2);
@@ -141,7 +135,7 @@
         let coordY = container.clientHeight + (y - 260 - y/4);
         let input = createInput(coordX, coordY);
         let label = createLabel(coordX, coordY, val);
-        let field = counterMap(counter, true);
+        let field = elementsMap(counter, true);
 
         container.appendChild(input);
         input.focus();
@@ -154,7 +148,7 @@
                     disableInput(input, field);
                     container.appendChild(label);
 
-                    let nextEl = counterMap(counter+=1);
+                    let nextEl = elementsMap(counter+=1);
 
                     if (nextEl) {
                         startApp();
@@ -163,17 +157,17 @@
                         let coordX = sumElement.offsetLeft - 2;
                         let coordY = sumElement.offsetTop + 6;
 
-                        let input = createInput(coordX, coordY);
-                        input.className = 'ext';
-                        container.appendChild(input);
-                        input.focus();
+                        let sumInput = createInput(coordX, coordY);
+                        sumInput.className = 'ext';
+                        container.appendChild(sumInput);
+                        sumInput.focus();
 
-                        input.addEventListener('input', function() {
-                            let validity = inputValid(input, input.value, sum);
+                        sumInput.addEventListener('input', function() {
+                            let validity = inputValid(sumInput, sumInput.value, sum);
 
                             if (validity) {
                                 setTimeout(function() {
-                                    disableInput(input);
+                                    disableInput(sumInput);
                                     sumElement.textContent = sum;
                                 }, 200);
                             }
