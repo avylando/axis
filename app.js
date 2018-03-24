@@ -26,6 +26,24 @@
     ctx.strokeStyle = '#ED1D30';
     ctx.lineWidth = 2;
     ctx.beginPath();
+
+    function counterMap(key, getBlock) {
+        getBlock = getBlock || false;
+
+        if (getBlock) {
+            switch (key) {
+                case 0: return aElement;
+                case 1: return bElement;
+                default: return false;
+            }
+        }
+
+        switch (key) {
+            case 0: return a;
+            case 1: return b;
+            default: return false;
+        }
+    }
     
     function renderArrow(start) {
         ctx.moveTo(start, 200);
@@ -34,13 +52,14 @@
         ctx.lineTo((start + 4), 188);
     }
 
-    function renderCurve() {
+    function renderCurve(cb) {
         let counter = 0;
         let startX = 37;
         const endY = 200;
         const step = 39;
 
-        return function (value, cb) {
+        return function () {
+            let value = counterMap(counter);
             let mY = 70 + (50*counter);
             let k = value * step;
             let endX = startX + k;
@@ -83,57 +102,28 @@
         return label;
     }
 
-    function counterMap(key, getBlock) {
-        getBlock = getBlock || false;
-        let result;
-
-        switch (key) {
-            case 0: result = a;
-                break;
-        
-            case 1: result = b;
-                break;
-
-            default: return false;
-        }
-
-        if (getBlock) {
-            switch (result) {
-                case a: result = aElement;
-                    break;
-            
-                case b: result = bElement;
-                    break;
-    
-                default: return false;
-            }
-        }
-
-        return result;
-    }
-
     function inputValid(input, curVal, val, field) {
         field = field || null;
 
         if (parseInt(curVal, 10) === val) {
             return true;
         }
-
+        
         if (curVal === '') {
             input.style.color = '#000000';
-            ;
+            if (field) {
+                field.style.backgroundColor = 'transparent';
+            };
 
         } else if (parseInt(curVal, 10) !== val){
-            setTimeout(function() {
-                    if (field) {
-                        field.style.backgroundColor = '#EDAC31';
-                    }
-                    
-                    input.style.color = '#ED1D30';
-                }, 500);
+
+            input.style.color = '#ED1D30';
+            if (field) {
+                field.style.backgroundColor = '#EDAC31';
+            }
         }
 
-        return false
+        return false;
     }
 
     function disableInput(input, field) {
@@ -167,7 +157,7 @@
                     let nextEl = counterMap(counter+=1);
 
                     if (nextEl) {
-                        startApp(nextEl, renderFields);
+                        startApp();
 
                     } else {
                         let coordX = sumElement.offsetLeft - 2;
@@ -185,15 +175,16 @@
                                 setTimeout(function() {
                                     disableInput(input);
                                     sumElement.textContent = sum;
-                                }, 300);
+                                }, 200);
                             }
                         });
                     }
-                }, 300);
+                }, 200);
             }
         })
     }
 
-    let startApp = renderCurve();
-    startApp(a, renderFields);
+    let startApp = renderCurve(renderFields);
+
+    startApp();
 })();
