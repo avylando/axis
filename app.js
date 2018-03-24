@@ -1,13 +1,6 @@
 'use strict';
 
 (function() {
-
-    // Work with canvas
-
-    const endY = 200;
-    const step = 39;
-    const myA = 80;
-    const myB = 120;
     
     let minA = 6;
     let maxA = 9;
@@ -25,85 +18,53 @@
     let aElement = container.querySelector('.a');
     let bElement = container.querySelector('.b');
     let sumElement = container.querySelector('.sum');
-    let canvas = document.querySelector('#canvas');
-
-    let ctx = canvas.getContext('2d');
+    let ctx = document.querySelector('#canvas').getContext('2d');
     
     aElement.textContent = a;
     bElement.textContent = b;
-    
-    // ctx.bezierCurveTo(100, 100, 200, 100, 270, 200);
 
     ctx.strokeStyle = '#ED1D30';
     ctx.lineWidth = 2;
     ctx.beginPath();
     
     function renderArrow(start) {
-
         ctx.moveTo(start, 200);
         ctx.lineTo((start - 10), 192);
         ctx.moveTo(start, 200);
-        ctx.lineTo((start + 2), 188);
+        ctx.lineTo((start + 4), 188);
     }
 
     function renderCurve() {
         let counter = 0;
-        
+        let startX = 37;
+        const endY = 200;
+        const step = 39;
+
         return function (value, cb) {
-            let mY;
-            let middleX;
+            let mY = 70 + (50*counter);
+            let k = value * step;
+            let endX = startX + k;
+            let mx1 = startX + (step/2);
+            let mx2 = endX - (step/2);
+            let middleX = (startX + endX) / 2;
 
-            if (counter === 0) {
-                mY = myA;
-                let startX = 37;
+            ctx.moveTo(startX, endY);
 
-                ctx.moveTo(startX, 200);
+            ctx.bezierCurveTo(mx1, mY, mx2, mY, endX, endY);
+            renderArrow(endX);
 
-                let k = (value - minA) * step;
-                
-                let mx1 = 80 + (k/value);
-                let mx2 = 220 + k;
-                let endX = 270 + k;
-                
-                ctx.bezierCurveTo(mx1, myA, mx2, myA, endX, endY);
-                renderArrow(endX, -1);
-
-                middleX = (startX + endX) / 2;
-            }
-
-            if (counter === 1) {
-                mY = myB;
-                let startX = 270 + ((a - minA) * step);
-                
-                ctx.moveTo(startX, 200);
-
-                let k = value * step;
-                
-                let mx1 = startX + (k/sum) - 10;
-                let mx2 = startX + (k);
-                let endX = startX + k;
-
-                ctx.bezierCurveTo(mx1, myB, mx2, myB, endX, endY);
-                renderArrow(endX);
-
-                middleX = (startX + endX) / 2;
-            }
+            startX = endX;
             
             setTimeout(function() {
                 ctx.stroke();
                 cb(middleX, mY, value, counter);
                 counter++;
             }, 600);
-            
         }
     }
-    
-
-    // Input logic
 
     function createInput (x, y) {
         let input = document.createElement('input');
-
         input.type = 'text';
         input.maxLength = '2';
         input.style.left = x + 'px';
@@ -114,7 +75,6 @@
 
     function createLabel(x, y, val) {
         let label = document.createElement('div');
-
         label.className = 'label';
         label.style.left = (x + 10) + 'px';
         label.style.top = (y + 4) + 'px';
@@ -123,75 +83,99 @@
         return label;
     }
 
-    function blockMap(key) {
+    function counterMap(key, getBlock) {
+        getBlock = getBlock || false;
+        let result;
+
         switch (key) {
-            case a: return aElement;
+            case 0: result = a;
+                break;
         
-            case b: return bElement;
+            case 1: result = b;
+                break;
 
             default: return false;
         }
+
+        if (getBlock) {
+            switch (result) {
+                case a: result = aElement;
+                    break;
+            
+                case b: result = bElement;
+                    break;
+    
+                default: return false;
+            }
+        }
+
+        return result;
     }
 
-    function inputValid(input, curVal, val) {
+    function inputValid(input, curVal, val, field) {
+        field = field || null;
+
         if (parseInt(curVal, 10) === val) {
             return true;
         }
 
         if (curVal === '') {
             input.style.color = '#000000';
-            return;
+            ;
 
-        } else if (curVal !== val){
+        } else if (parseInt(curVal, 10) !== val){
             setTimeout(function() {
-                    let el = blockMap(val);
-                    if (el) {
-                        el.style.backgroundColor = '#EDAC31';
+                    if (field) {
+                        field.style.backgroundColor = '#EDAC31';
                     }
                     
                     input.style.color = '#ED1D30';
-                }, 300);
-            return;
+                }, 500);
         }
+
+        return false
     }
 
-    function renderFields(x, y, val, counter, cb = null) {
+    function disableInput(input, field) {
+        field = field || null;
+        if (field) {
+            field.style.backgroundColor = 'transparent';
+        }
+        
+        input.style.opacity = '0';
+        input.disabled = 'true';
+    }
 
+    function renderFields(x, y, val, counter) {
         let coordX = x - 15;
-        let coordY = container.clientHeight + (y - 260 - (y/4));
+        let coordY = container.clientHeight + (y - 260 - y/4);
         let input = createInput(coordX, coordY);
         let label = createLabel(coordX, coordY, val);
-        
-        container.appendChild(input);
+        let field = counterMap(counter, true);
 
+        container.appendChild(input);
         input.focus();
 
         input.addEventListener('input', function() {
-            let validity = inputValid(input, input.value, val);
+            let validity = inputValid(input, input.value, val, field);
 
             if (validity) {
                 setTimeout(function() {
-                    let el = blockMap(val);
-                    el.style.backgroundColor = 'transparent';
-                    input.style.opacity = '0';
-                    input.disabled = 'true';
-                    let label = createLabel(coordX, coordY, val);
-
+                    disableInput(input, field);
                     container.appendChild(label);
 
-                    if (counter === 0) {
-                        startApp(b, renderFields);
-                    }
+                    let nextEl = counterMap(counter+=1);
 
-                    if (counter === 1) {
+                    if (nextEl) {
+                        startApp(nextEl, renderFields);
+
+                    } else {
                         let coordX = sumElement.offsetLeft - 2;
                         let coordY = sumElement.offsetTop + 6;
 
                         let input = createInput(coordX, coordY);
                         input.className = 'ext';
-
                         container.appendChild(input);
-
                         input.focus();
 
                         input.addEventListener('input', function() {
@@ -199,8 +183,7 @@
 
                             if (validity) {
                                 setTimeout(function() {
-                                    input.style.opacity = '0';
-                                    input.disabled = 'true';
+                                    disableInput(input);
                                     sumElement.textContent = sum;
                                 }, 300);
                             }
@@ -212,7 +195,5 @@
     }
 
     let startApp = renderCurve();
-
     startApp(a, renderFields);
-
 })();
